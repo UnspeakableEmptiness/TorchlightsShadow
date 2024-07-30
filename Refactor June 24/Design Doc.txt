@@ -1,0 +1,169 @@
+Outline 10/23/23
+
+Existing Features - proof of concept
+    Dynamic light and shadow
+        Color Blending
+        Light Diffusion
+        Line of Sight
+        Dynamic Flicker/Shimmer Effects
+    Pixellated ascii graphics
+    Mouse-supported player movement
+    Very basic RPG combat
+    Very basic trait and condition system
+
+Alpha Features - first prototype for playtesting (1-2weeks) (10/29-11/5)
+    Multiple player characters 
+    Ranged attacks/multiple attack/action options
+        Dashing
+        Shoving
+        Ranged/Melee Switch
+        Torch Throw* (need to wait for items)
+    Flesh out traits and conditions
+        Stunned
+        Poison
+        Bleed
+        Paralysis
+        Fear
+        Blindness (dark vision/normal vision traits)
+        Confusion
+        Prone
+    Procedurally generated cavern/dungeon map
+
+    //Borderline
+    Non interactable furniture/objects
+    Tile system overhaul
+        combine lightmap, sightmap, displaygrid, and grid into a grid of objects of class "tile"
+        use new grid to handle checks of where characters, uiobjects, and other gameobjects/items are located
+
+Beta Features - after receiving feedback from first round of playtesting (2-4 weeks) (11/12-12/3)
+    Interactable furniture/objects
+    //End borderline
+    Come to decision about HTML canvas vs text display
+    Lighting overhaul enabling transparency/partial shadows - possibly address wall problems with directional illumination
+    Inventories and items with statistical effects
+    Basic player character level-up system
+    3rd area type and beyond (ruins, crypts, animal dens, goblin gardens/hunting grounds/fishing spots)
+    Environmental hazards such as fire and toxic gas (scholar class?)
+    Enemy morale system and fleeing behavior
+    Stealth overhaul involving new ways to be discovered (IE sound and torchlight) and new ways to hide (IE darkness and stealth mode)
+    Resting system to restore HP
+
+MVP (point at which I could choose to start work on something else) (2-4 weeks for features + unknown logistics/distribution lagtime)
+    Save and load system
+    Game beginning and end + main menu
+    Graphical overhaul to support being played on any machine
+    Double check licensing of font/potentially create or commission a custom font/tileset
+    Codebase overhaul to allow game to run as standalone executable or be hosted on a website
+    Added to a personal website of my own that acts as a portfolio
+
+Branching Future Features (after I have a game, diretions I could go to expand it out after 1.0 is public)
+    Multiple levels that have different kinds of areas generated
+    Minimalist story involving short bits of text from the party
+        Little bits of poetry or dialogue during rest sequences to humanize the ascii art party
+        Darkest Dungeon style barks during combat
+        Brief yet evocative descriptions of items, objects, and characters
+    Address the question of saving/permadeath
+        Permadeath with short runs ala spelunky
+        Permadeath with long runs ala nethack
+        Saves with the intention of only playing the game once or twice
+        Unlocks between runs adding more content in future playthroughs ala rogue legacy
+        Options for permadeath or traditional rpg style saves ala caves of qud
+        Lots of options!!!!
+    Non-combat encounters such as merchants
+    Non-cave environments such as towns
+    Over-arching storylines like Baldur's gate
+    Macro strategy for a larger campaign ala darkest dungeon
+    Deal with the question of verticality
+        This would probably entail some kind of hybrid between the pure 2d of traditional roguelikes
+        And the horizontal slice method of Dwarf Fortress
+        One simple way to do it would be just take into account elevation for an otherwise flat grid.
+        This would result in a kind of topological map where A can be higher than B, but A is not atop B.
+
+New outline 6/14/24
+
+Existing features - Alpha/Beta
+    Dynamic lighting
+        Diffusion
+        Shadows (soft and hard)
+        Directional wall illumination
+        Gamma Correction
+        Objects and tiles with absorbtion profiles instead of set colors
+    Combat
+        Enemies with ranged and melee attacks
+        Multiple party members with ranged and melee attacks
+        Reactions such as attacks of opportunity and overwatch
+        Basic traits and conditions IE stunned, surprised, prone
+    Procedural generation
+        Placeholder cavern/dungeon cellular automata algorithm
+        Placeholder room accretion algorithm
+    Environments
+        Placeholder doors
+        Objects such as furniture, statues, tall grass, etc
+
+Brainstorming features
+    Combat
+        Enemy AI overhaul
+            Enemies using a breadth-first search through possibility space to plan actions
+                Utility function based on temperment, weapon range, factors such as cover and lighting, etc
+            Enemies having idle behaviors and searching/suspicious behaviors
+            Sounds/stealth system so that enemies can hear what's going on nearby
+            Potential sliding scale of suspicion
+                Enemies can spawn asleep or idling (maybe even unarmed)
+                Become suspicious when they hear a noise meaning they're no longer surprisable (this is when they would arm)
+                Become even more suspicious if they hear more noises meaning they go to investigate
+        Rethink player interaction
+            Possibilities include
+                One-click per character?
+                Choosing characters to act in whatever order you want/mixing turns?
+                Enemies moving between PCs?
+        More generic actions such as jump, kick, shove, throw?
+        Complex attack calculations
+            Light
+            Cover
+            Conditions
+            Weaknesses or immunities?
+            Ranged/Melee distinctions such as for prone targets
+            Flanking?
+        Crits?
+
+    Procedural generation
+        Levels
+            
+    Environments
+        Exploding barrels?
+        Breakable bridges, barricades, furniture, etc?
+        Abysses and rapids that kill you?
+        Spreading fires/smoke?
+        Clouds of poison and death?
+        Chests?
+        Secret doors?
+
+Minimum viable product features
+    Audio
+        Dynamic sound effects
+            Attacks/misses
+            Footsteps
+            Environmental effects IE running water or crackling fire
+        Dynamic Music
+            Background ambience that depends on area
+            Instruments that come in based on who or what is on screen
+    Combat
+        Simple AI overhaul
+            some small enemy idle behavior (IE patrol routes)
+            slightly smarter pursuing behavior
+        Simple PC overhaul
+            Better PC death handling
+            More intuitive or tutorialized controls
+    Procedural generation
+        beginning
+        multiple unique areas generated in sequence
+        enemies/bosses
+        final area/boss
+        end
+    Environments
+        Better doors?
+        Usefully interactable objects IE exploding barrels/traps/treasure chests/buffs/pickups/heals
+    General
+        Saving and loading
+        Main menu
+        Multi-machine compatibility

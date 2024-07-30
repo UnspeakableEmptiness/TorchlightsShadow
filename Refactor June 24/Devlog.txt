@@ -1,0 +1,1106 @@
+10/23/23
+    So far today, I wrote out a design document, and I added multiple player character support to the game.
+        messing around with multiple player characters made the game feel more tactical.
+        I also reduced the number of moves a character could make to emphasize this change.
+        I think the camera should probably start following the average position of the characters.
+        right now there is nothing in place to stop characters from being left behind.
+    the technical side of adding multiple player characters was surprisingly simple.
+    I generalized a lot of code to work with any character in the player characters array.
+    I simplified the enemyturn and playerturn functions a lot.
+    multiple PCs is pretty much done honestly.
+
+    That's one item of my alpha checklist down and three to go
+        Tomorrow I will do one of the following
+        - start on actions overhaul (add unique attacks that can be made at range or inflict conditions).
+        - start on traits/conditions overhaul to enable the list of basic conditions outlined in the design doc.
+        - start on proc-gen of either caverns or dungeons.
+
+    Hopefully my alpha checklist will be done by Sunday 10/29/23 and I can start playtesting in ernest.
+    I've outlined a beta phase after that and a minimum viable product description for after that.
+    My goal is to create something that can be played from front to back in the next few months.
+    After that I'll reevaluate and figure out if it's worth continuing development on this project or starting something new.
+
+10/24/23
+    This Morning I have just been working on optimization again.
+    I want the game to run smoothly even with a million tiles and thousands of lightsources and enemies.
+    If I can optimize it for that, I will have given myself tons of headroom to work with.
+
+    This morning's performance adjustments
+        Implemented throttling of the drawgrid function so that rapid mouse movements don't cause as much lag
+        Restricted the drawing of actionqueues to when controllock is true*
+            (*I may try to implement a feature later that draws prospective action queues for enemies during player turn)
+    Future performance adjustment low-hanging fruit
+        Consolidate charactersnearby into an array of its own that only needs to be update periodically
+        Make drawgrid and other updating function only care about nearby characters
+
+    Outline of what I want to work on with the rest of the day
+        Proc gen?
+        Traits and conditions?
+        Actions?
+    
+    I've gotten really bogged down tweaking visuals. I ran into a whole problem with line-spacing.
+        It arose from switching over to drawing dark spaces as just whitespace to imrpove performance.
+        I've spent quite a while on it, but now the game does run better. So it wasn't all wasted.
+    
+    I also added player characters being able to see a few tiles around them even in the dark.
+    I can't remember if that was today or yesterday.
+
+    What I want to do with actions 
+        Character action queues should contain more than just move coordinates.
+        The simplest way to do this, is to add things onto the queue other than coordinates.
+        If I establish the standard is that a coordinate is a move, and something else is an action, that might be enough.
+        Otherwise I'd have to make even generic moves into objects of a class "action"
+        I don't know if that is necessary.
+        Actions for the 1.0 (first pass)
+            Attack(melee)
+            Attack(ranged)
+            Attack(add condition such as poison, paralysis, stun, prone, etc)
+            Dash
+        Actions for 2.0 (second pass)
+            Jump
+            Attack(area of effect)
+            Healing
+            Buffing
+            Destruction of objects/terrain
+            Sneak
+            
+    Note on traits and conditions
+
+        Dnd5e has the following list (*are things I definitely want)
+            *Blinded
+            Charmed
+            Deafened
+            *Frightened
+            Grappled
+            *Incapacitated
+            Invisible
+            *Paralyzed
+            Petrified
+            *Poisoned
+            *Prone
+            Restrained
+            *Stunned
+            *Unconscious
+            Exhaustion
+        Other simpler ones
+
+            Damage bonus
+            To hit bonus
+            AC bonus
+            Temporary HP
+
+10/25/23
+    I did end up getting to starting on the actionqueue overhaul. I should be able to finish today.
+    Today I just want to generalize actions and then implement attack ranges, conditons, and dashing.
+    After that I will just have proc-gen and the traits/conditions overhaul left before my alpha build.
+
+    After the Alpha build the obivous next things are items, object, and generalizing tile code.
+
+    Another important thing to note about the actions overhaul. It also allows for new constraints.
+    I can now give characters a number of moves and a distinct number of attacks.
+    There is a deep design question here about whether attacks and moves should be interchangeable.
+
+    I just finished the poison attack code. I had to make a dynamic version of the addcondition function.
+    This new dynamic version can have a target that is specified when it's called, rather than gleening it from a trait.
+
+    Just finished Dash code. I think I want to add auto-dashing so that you can dash to a distant tile in one click.
+    This would also make non-combat movement less tedious by default. Lessening the need for a bespoke non-combat mode.
+        I think I also want to add reverse dashing at some point to see how it feels.
+        Attacks and moves having an exchange rate seems like it would feel pretty natural.
+    
+    I just finished player ranged attacks. Enemy ranged attacks should be soon to follow.
+        UI for player ranged attacks still looks really clunky, but so does all the UI. An overhaul is on the horizon.
+        Enemy ranged attacks 1.0 should be pretty simple.
+            Modify my pathfinding to halt whenever we get in range.
+            Have enemies check whether they are in range, and then take their attack action.
+
+    First pass of enemy ranged attacks is done. There is still no visual indication of attacks.
+    Ranged attacks pretty much look like nothing at the moment, but all the logic is there.
+    Enemies just stop moving closer to the player characters if they are in attack range to attack instead.
+
+    After knocking out the action overhaul, I ended up fiddling around with crude animations.
+    I added one for attacks, and one for when stunned enemies skip their turns.
+
+10/26/23
+    I've probably got some more tweaking to do. I just fixed a bug with the audo-dash.
+    After that it's proc-gen time!
+
+    My goal for the alpha build is to have two kinds of area: dungeon and cavern.
+    Caverns should look natural, be sparsely inhabited, and have lots of open spaces.
+    Dungeons should be cramped and labrynthine and crawl with goblins like a hive.
+    
+    Proc-gen first pass
+        Generate caverns first using cellular automata?
+        Find large patches of rock in which to spawn dungeons?
+    
+    I have broken apart proc-gen into a few steps
+        One of them chunks together supertiles out of many subtiles and generates seed values for them
+        It then generates the noisemap with a bias toward producing tiles based on the seed
+        This makes tiles within the same chunk similar to each other.
+        This is using a rectangular tile system.
+        I should switch to perlin noise at some point for more smoothness and less squareness
+
+        The next one does basic cellular automata to make cavern walls and cavern floors
+
+        The next one does more basic cellular automata on just the floor tiles
+        it makes them randomly water/moss, stone, or dirt
+        after that, it groups them together with basically the same algorithm as walls/floors
+
+        The next step should be to generate dungeons, but this one will be more complicated.
+        I think I should use some kind of flood fill to create regions that are inside the cavern walls
+        After I have a distinct number of regions, I should generate dungeons strictly within those regions
+
+        I got chat GPT to write a gradient noise function for me and replaced my supertile system with it.
+
+10/27/23
+    
+    I experiemented a bit with a binary space partition algorithm for generating rooms for my dungeons.
+    I don't love it though, and I'm thinking about going back to cellular automata, I'm not sure yet.
+
+    Generally speaking, proc-gen is the last big thing I need to finish before I can start playtesting.
+    Just to flesh out what that might look like, I may create a primitive level system that has a start and end.
+    The purpose of this would be just to give playtesters a goal, and to make it clear when they were done.
+    If a playtester wanted to play through a few times, that would be nice. I mostly want to hear about the core mechanics.
+    I just don't want the current limitations of graphics and especially UI to get in the way of that.
+    Not sure if I'll need to do a UI overhaul prior to playtesting or not.
+
+    Today I will work more on proc-gen.
+
+    I switched my dungeon generation algorithm over to the same two algorithms I use for cavern generation.
+    These are a gradient noise algorithm and a cellular automata algorithm.
+    For dungeons, I just make cellular auotmata primarily (only?) interested in orthogonal tiles.
+    This creates more square rooms.
+    I also make the frequency of my (perlin?) noise much greater so that it generates small rooms/halls instead of caverns.
+
+    I've begun to think about all the dead ends in my dungeons.
+    I'm wondering, from a design perspectice, how should I think about dead-ends.
+    Should dead-ends be fundamentally bad and things the player should avoid?
+    Should dead-ends be good and encourage players to explore every nook and cranny?
+    Should dead-ends be a complicated bargain, where you trade off one resource for another?
+
+    This has me thinking about themes.
+    If my game is fundamentally about a desperate attempt at survival,
+        Then you shouldn't even consider going back into a dungeon just to explore and get all the goodies.
+    If my game is fundamentally about greed,
+        Then you should want to do everything necessary to ransack every constellation of rooms you find.
+    If my game is fundamentally about vengeance,
+        Then you should want to slay everything that moves within those god-forsaken halls
+    
+    No matter which way things go, I think I should be okay with their being numerous dead-ends.
+    I actually think that non-linearity should be really important.
+
+10/28/23
+    
+    Yesterday I went ahead and implemented my noise+cellular automata dungeons inside noise+CA caverns.
+    I just fiddled with the parameters and changed the CA to make rooms more cramped and square than caverns.
+    I put it all together and now I have wide open caverns and tiny cramped dungeons.
+    Now I just need entrances and exits, and then maybe some placeholder mechanics, and I'll have my alpha build.
+    I want to work on a little optimization because the performance takes a huge hit when there are too many enemies.
+    This suggests that enemies who are very far away are still being considered for some things (probably traits, and some UI stuff).
+    Once I've got light sources and enemies to the point where they don't effect performance when they are far enough away,
+    I should be able to generate huge maps, crawling with enemies without significant performance drops.
+
+    Dungeon entrances and exits:
+        I'm considering using some kind of Djikstra map function to generate regions and also generate paths through them.
+        The brute force method for flood-fill region generation would be something like.
+            Go through every tile in the map, for each tile, if it doesn't have a region assigned to it, assign it to a new region
+            After assigning a new region, add all connecting floor tiles to the same region using a Djikstra map.
+        Maybe prune regions that are too small (maybe just dungeons).
+        Once regions have been generated, find suitable tiles for entrances and exits.
+            Each dungeon should only have one (or maybe two) entrances per cavern it neighbors
+            The entrances to dungeons should be maximally far apart so that there aren't many shortcuts from cavern to cavern.
+
+    I'm just now realizing that my goal for my alpha build was to be done some time in the next week. Optimistically, tomorrow.
+    I think I should really buckle down and try to finish my alpha build as early as possible.
+    I think maybe I should take around 3-7 days to work primarily on maybe optimization while I'm still trying to get feedback.
+    After that, I think it would make sense to go ahead with new features like the item system, object system, and
+
+    I have been banging my head away at the problem of connecting dungeons to caverns.
+    I haven't really tried anything yet because all of the algorithms I'm considering would take a lot of work.
+    I also just have a lot of problems with all of them so I'm not stoked to start.
+    The best I think I've come up with so far is a method that involves flood filling the whole map.
+        This method would involve flooding all tiles of a region.
+        Then once all the floor tiles have been explored, go to the last explored potential entrance tile, and break it open
+        Then continue the flood filling of floors until you run out again, and then bust through another entrance tile.
+        I could prevent loops by making it so that the second time the flood fill algorithm comes across a possible entrance,
+        It either doesn't add it to the pile of possible entrances, or actually removes it by some mechanism.
+    I think this method would be relatively simple.
+    I also think it has a big upside where, if I'm not mistaken, all entrances/exits of dungeons should be maximally far apart.
+
+    First pass at dungeon entrances is something of a success.
+    My modified flood fill algorithm works exactly as intended.
+    Messing around with it, I don't really find it compelling yet which is kind of a bummer.
+    I put a lot of work into this so I feel like it's gonna be hard to scrap it, if it isn't fun.
+    Here are some things I could do to repurpose the work I've already put it in if I need to change course:
+        Switch to traditional roguelike controls and abandon the squad.
+            This would mean that everything I've done for the visuals of the game could be repurposed
+            As well as most of the combat
+            And some version of the procedural generation.
+        Switch to a duo system
+        Make the viewport much larger so that the game doesn't feel so finnicky
+    But I'm getting ahead of myself. Honestly if I finished something, even if it sucks, I think that's a win.
+    
+    Here is something I read, that I think is worth remembering.
+    It's called The Cult of Done Manifesto:
+    
+        There are three states of being.
+        Not knowing, action, and completion.
+        Accept that everything is a draft. It helps to get it done.
+        There is no editing stage.
+        Pretending you know what you're doing is almost the same as
+        knowing what you are doing, so just accept that you know
+        what you're doing even if you don't and do it.
+        Banish procrastination.
+        If you wait more than a week to get an idea done. Abandon it.
+        The point of beind done is not to finish but to get other things done.
+        Once you're done you can throw it away.
+        Laugh at perfection.
+        It's boring and keeps you from being done.
+        People without dirty hands are wrong.
+        Doing something makes you right.
+        Failure counts as done. So do mistakes.
+        Destruction is a variant of done.
+        If you have an idea and publish it on the internet that counts as a ghost of done.
+        Done is the engine of more.
+
+    I have an optimization checklist I need to make.
+    Assuming at some point in the next week or so, I'm gonna look for people to playtest for me,
+    I should have something to work on that I can do in parallel.
+
+        Fix the noise update function to directly alter the lightmap so that the noise update can call a non-lighting drawgrid.
+        Create a new array for characters nearby that only updates periodically.
+        Create a new array for light sources nearby that only updates periodically.
+        Fix a bunch of for loops that shouldn't be for loops. (This problem is especially egregious in proc-gen)
+
+    Today I banged my head against proc-gen for a while before finally coming to something of a novel solution.
+    I'm really not loving how proc-gen is turning out to be honest. It really hasn't started to feel like a game yet.
+    The proc-gen has made it feel more like a strange project.
+    Before I started on proc-gen, I could see the potential of the very basic mechanics I was implementing.
+    Now I feel like I am primarily seeing their limitations.
+
+    Oh well. Next time, I'll make a game that starts out gamey, and becomes a complex mess I get to chew on later.
+    I like to jump to chewing on the complex mess. I think that's how I'm wired. I will have to figure out a way that works for me.
+
+    Options for sharing alpha version/getting playtesters and feedback.
+        I want to get together some screenshots and maybe screen recordings/gifs to be able to post on /r/roguelikedev
+        Reach out to friends and family
+        Find additional online forums
+        
+10/29/23
+    Today is the day I want to finish my alpha build.
+
+    I realized yesterday that I neglected to put anything in my design doc about sound.
+        In a perfect world my game would end up with sound effects, but who knows.
+
+    What do I need to do to finish an alpha build?
+        UI overhaul?
+        proc-gen tweaking?
+        make it gamier? (IE add coins for points, and hearts for health, and a spawn point and end goal?)
+    
+    So far this morning and afternoon, I have just been tweaking thigns to make my proc-gen work as intended.
+    I made the starting area something that gets defined and generated before proc-gen, and then respected during.
+    This way the starting area will be open and will seed an open region.
+    Sometimes it still gets totally enveloped by cave walls, but even then, it will generally produce dungeon entrances.
+    If all else fails, if more than half the map is innaccessible from the starting area, the generation algorithm runs again.
+    
+    I think there needs to be a goal in order for me to be able to call this a game.
+    Maybe I should add in gold that gives you points when you walk over it.
+    I could generate health granting drops too.
+
+10/30/23
+    Yesterday I did end up finishing up my alpha build.
+    You start the game in a cavern with a cryptic message about what's going on:
+        "The torch begins to flicker, and the way out has long faded from memory."
+        "The sounds from the dark have only gotten louder."
+        "They fear the firelight, but it dwindles by the moment."
+    You wander around and explore the dungeons, killing goblins and collecting gold as you go.
+
+    This week should be about playtesting and maybe optimizing. To be honest though, I'm not sure how many playtesters I can find.
+    So maybe I shouldn't put new features on hold just yet. I could just start on overhauls now.
+    I know if I break things, I at least have an exported build now that sort of works.
+
+    Possible class names (with the help of GPT4):
+        Warriors/tanks(fighters, barbarians)
+            Deserter
+            Crusader
+            Dishonored
+            Disgraced
+            Crestfallen Knight
+            Berserker
+            Mercenary
+        Rogues/DPS(rogues, rangers, monks)
+            Exile
+            Wanderer
+            Fugitive
+            Huntsman
+            Poacher
+        Support(bards, druids, clerics):
+            Naturalist
+            Minstrel
+            Poet
+            Scholar
+            Scribe
+            Page
+            Antiquarian
+            Acolyte
+            Devotee
+            Ascetic
+            Mystic
+            Seer
+            Alchemist
+        Wildcards
+            Shifter
+            Skindancer
+            Skinwalker
+            Blighted
+            Profane
+            Cursed/Accursed
+            Heretic
+
+    I don't really know what to do today to be honest.
+    I finished my alpha build, and I'm not sure if I should start working on new features or trying to get playtesters or...
+    Maybe let me think about the next big overhaul I have planned.
+        Tiles should be objects of a class tile. Not longer should they just be numbers
+        The tile class should contain:
+            whether a tile is brightly or dimly lit or in darkness
+            the tile absorbtion
+            the output color of the tile given the brightness of light
+            whether a character is on it and if so, which character
+            whether there are items on it/which items
+            whether there are objects on it such as tall grass, doors or furniture
+            whether there is a uielement on this tile
+            whether a tile is visible
+        Also I can't remember if it's on my design doc, but a huge UI overhaul is coming after the tile overhaul.
+        Once the tiles are redone, UI elements will be easier to add and remove because they will be stored on tiles.
+        Onscreen UI should hopefully replace the entire log. On screen text should be information dense and readable.
+        It should accompany animations to describe if an attack hits or misses or if a condition has been applied.
+        It should also provide information upon mouse over that tells the player what the results of their action might be.
+        For now that would just mean displaying likelihood of hitting and range of damage for attacks.
+        In the future it should describe why it is likely or unlikely.
+        As more factors are added in, the text should be able to convey their effects:
+            When it's the huntsman's turn, and the player mouses over a goblin it should convey the following informtaion:
+                - The huntsman has a bonus to hit for his skill
+                - The goblin has a low armor class
+                - The huntsman receives a penalty if he is too close or too far
+                - The hunstman receives a penalty if there is something or someone in the way
+                - The goblin receives a large armor class penalty if he is stunned
+
+                Default
+                ▮▮▮▮▮▯▯▯▯▯
+                    ^      ^
+                   hit    miss
+                Skilled
+                ▮▮▮▮▮▮▯▯▯▯
+
+                Skilled   Stunned
+                ▮▮▮▮▮▮▮▮▮▯
+
+                Outranged
+                Darkness
+                ▮▮▮▯▯▯▯▯▯▯
+
+                I could avoid putting numbers on screen and just use words to describe things that are numbers under the hood.
+                The Deserter doesn't have a strength modifier of +2. He is strong.
+                He does not have a +2 proficiency bonus. He is Skilled.
+                Level-ups could be added in later. that attach words to different modifiers
+                +1          +2          +3              +4
+                athletic -> strong ->   herculean
+                lithe ->    agile ->    dexterous ->    acrobatic
+                
+
+    Something I can do to work toward getting playtesters is start taking screenshots and making gifs of the game.
+    Then I can post them to imgur, and share them to the /r/roguelikedev subreddit this Saturday.
+    Then I can get feedback on the appearance of the game and ask about playtesting.
+
+    Maybe a new way to think about what I should work on right now is that I should want to make adding to my game more frcitionless.
+    A ton of my code is not yet general enough or modular enough to be easily added to.
+        Here is a breakdown
+        Modular:
+            Enemies
+            Player Characters
+            Attacks
+            Conditions
+            Traits
+        Unmodular:
+            Level generation
+            Tile types
+            Items
+            Animations
+            UI elements
+
+    Tile overhaul. 
+    What is the new tile class replacing?
+        Grid variable
+        Lightmap variable
+        Sightmap variable
+        UI elements array (probably)
+        Ischarhere function (probably)
+        Maybe even the characters array
+        Tilenames array
+        Floortiles array
+        Background color calculations
+        Calculations of move cost
+        Calculations of traversability
+        Calculations of transparency
+        Calculations of specularity (water flickers when a light is close, everything else does the opposite)
+    
+    Priority of visual elements
+        UI
+        Characters
+        Objects
+        Items
+        Base Tile type
+
+10/31/23
+    Yesterday I ended up spending a while refactoring my code in the tile overhaul.
+    Hopefully I'll finish that up today. I can work in the beginnings of a UI overhaul after that.
+
+    Just saw a picture on the /r/roguelikedev subreddit that made me think I should add rivers into my game. I think they'd look nice.
+
+    I worked a tiny bit more on the tile overhaul today. Almost everything is done. Just the character system refactoring is left.
+    Other than that, I've pretty much written off today. Things have not been good.
+
+11/1/23
+    I forgot yesterday was halloween.
+
+    I was thinking about my UI some more this morning and yesterday, and i'm not really sure how I should proceed with some things.
+    One thing I've been thinking about is adding the game log back in, but putting it within the bounds of the viewport.
+    The bottem left hand corner of the screen is pretty free real estate anyway. I could just put the texter atop the screen.
+    Even if this would obscure something important sometimes (might be avoidable anyway), I could have log messages have a timer on them.
+    
+    I've also been thinking about how far I could go without any numbers on screen. I feel like reducing them would be nice.
+    I could change health to little red gumdrops that have 3 states, full, half full and empty.
+    I could represet to hit chances as five icons that represent 20% to-hit chances that can also be half empty.
+    I could change damage indicators into a number of red gumdrops or an animation of remove health gumdrops.
+    These are all possibilities.
+
+    I think the biggest problem on the horizon for this UI overhaul though is items and inventories.
+    There simply won't be enough real-estate on the screen to represent a rich inventory system.
+    My two options are:
+        Make the item management system so simple that it doesn't need much real-estat
+        Or
+        Allow inventory management to happen in the open space to the left or right of the screen.
+    
+    I think I am focusing a lot on minutia, when I could just start working on new features.
+    Maybe I should just finish up my tile system refactoring today, and then start work on new features.
+    Next features on the horizon are:
+        Furniture (non-interactable)
+        Line of sight and shadow overhaul to allow for transparency/partial shadows
+        Furniture (interactable IE doors)
+        Items
+
+    The last big thing I need to tackle for my refactor is characters.
+    Right now all characters are stored in a big array. They are accessed by their index in that array.
+    I want to keep the one big array where the characters live, but I want to access them via the tile they stand on.
+    If my understanding of javascript fundamentals is right, if within the tile, I say 
+        tile.character = characters[index]
+    that should mean that the tile will store a pointer to the character data, and changes made from either reference
+        tile.character.pos = somewhere
+        characters[index].pos = somewhere
+    should update the same data.
+    
+    I might have something wrong there so I'm going to talk to chat GPT about it
+    Chat GPT has confirmed my thinking about shallow and deep copies.
+    An object that is referenced in an array can also be referenced in another object like a tile no problem.
+
+    First pass at integrating characters into the grid updates has gone off without a hitch.
+    I should never have to call ischarhere again. Hopefully that will improve my code's performance.
+    In theory, ischarhere will actually still work though so I haven't broken everything that is outdated.
+    I just have a faster way to find characters than iterating through an array with potentially thousands of elements.
+
+    I think I have set myself up to be able to add items and objects.
+    I think I can do transparency and partial shadows pretty easily.
+    To be honest, the biggest thing I am currently dreading is inventories. I feel like the UI will not be pleasant.
+    Maybe I'll just start with the most minimal form of inventory and take it from there.
+    Maybe the minimal inventory could be something like:
+        Characters get a primary and secondary item
+        Pressing x switches from primary to secondary
+        If you pick up an item it replaces whichever item you have out at the moment, dropping the old one.
+    This would still let me put cool items in the game that have interesting effects.
+    I'm not sure though. Maybe I should just bite the bullet and commit to a standard RPG inventory system.
+    I could also just try to go without, adding as few featurs to the game so I can finish it faster and spend more time on polish.
+
+    I still think objects would be a good addition. 
+    Tall grass that creates shadows. Rubble that is difficult terrain or cover.
+    Broken pews of an ancient ruined temple.
+    Sealed tombs that each contain a single ornate sarcophagus.
+    
+    I don't know how these things should be represented on screen, but I think it would be cool to add them.
+
+11/2/23
+    I worked on objects for a bit this morning, and I have corpses now.
+    Transparancy is now functional. Characters cast soft shadows. Objects can cast shadows as well.
+    
+    The big things on the horizon right now are the item/inventory system and the proc-gen overhaul.
+    I'm not super stoked on either. Proc-gen is hard, and I really don't know what direction I should go in with items/inventory.
+
+11/3/23
+    Objects and transparancy are in. Next up is items and inventories.
+    I think I should take some screenshots and make some gifs first today.
+
+    Items and inventories.
+        1.0: Characters have one weapon that determines their attack. It can be switched by standing on an item and pressing g. - done
+        2.0: Characters have a primary weapon and a secondary weapon they can switch between with x. - done
+        3.0: Attacks reflect statistical characteristics of weapons
+        4.0: Characters have stats that determine what weapons they are good with
+        5.0: Weapons have limits on who can use them, can impart passive benefits, and can include special maneuvers
+        6.0: Weapons can be stackable and throwable.
+
+11/5/23
+    I took yesterday off. Today I come back, and I'm planning on working some more on items and inventories.
+    I think I'm going to work on combat's statistical side for a minute, allowing bonuses to be dependant on multiple factors.
+    I want attacks to be governed by the wielder's stats as well as the inherent properties of the weapon.
+    I want to rework the attack function system to be more modular.
+
+    I also am considering working in UI buttons. These would be UI elements you can click on that would be handled separately
+    I think I could implement this pretty easily, but I am also afraid menus will be clunky and detract from the ambiance.
+    I think at least minimal menus will probably be necessary eventually, in order for the game to not be too simple.
+
+    How the new attack function system should work:
+        The attack function should be generic, and when it is called, it should pull relevant information from the character.
+        The attack function could be a method of the character class?
+        It needs to check the AC of the target, the stats and weapon of the attacker, and check for bonuses or penalties.
+        AC, weapons, and stats are all very straightforward. Other penalties require some thinking.
+        Stunned enemies should be easier to hit, but where should that penalty live. Should it be a property of the condition?
+        Should the attack function look through the targets conditions?
+
+11/6/23
+    Yesterday I ended up working on some new UI features like on-click attacks even for ranged weapons.
+    I also added minimum range to ranged weapons, and will probably have to overhaul enemy AI to make ranged enemies work again.
+
+11/7/23
+    I don't really remember what I worked on yesterday. I'm getting somewhat lost. I think I should come back to my design doc.
+
+    Interactable objects and hazards:
+    I could add doors that you can walk up to and open.
+    Potentially, I could make it so they could be locked, and be subject to attacks.
+    I think the game-play return of doors is really limited, but who knows.
+    Maybe another round of proc-gen will lead to choke points at doors being really important to dungeon layouts.
+
+    Hazards like fire or toxic gas or other such things also seem like they'd have really limited gameplay effects.
+    They could become more consequential if I add in shoving or explodable barrels or some other way to use/create hazards.
+
+    Maybe I should actually wait on these, but I'm not sure.
+    I could just plan out a hypothetical encounter, and then batch all the features necessary and do them all at once.
+
+    Non-interactable objects are done
+    Lighting overhaul for partial transparancy is done
+    Tile grid overhaul is done
+    Items with statistical effects is pretty much done. 
+        There are no inventories in which to juggle items, but they can be swapped acquired.
+        
+    Remaining Beta features
+        Interactable objects
+        Player character advancement
+        3rd area type and general proc-gen overhaul
+        Hazards
+        Enemy morale
+        Stealth
+        Resting to heal PCs
+
+    This is all directly from the list I wrote out before my alpha version was done.
+
+    Here I'm going to outline a new vision and see how it compares.
+
+    The player characters traverse a long winding cavern that has goblin dens strewn about the cavern walls.
+    Killing all the goblins is generally a good idea because it allows the PCs to gain experience, and sometimes goblins have items.
+    After a number of goblin dens have been cleared out, the player characters find one large goblin den that turns into something else.
+    It becomes clear that this goblin den is within ancient ruins. The ruins contain more nefarious threats deeper within.
+    The ruins contain some new enemy, maybe hobgoblins or something.
+    Unlike the dens, the ruins contain traps and even some doors. They also contain lots of rubble.
+    The ruins contain special rooms like ancient chapel's, tombs, altars, etc to add flavor and maybe be home to items.
+    Beneath/beyond the ruins are the catacombs. The place where the scourge under the mountain has its breeding grounds.
+    The strongest creatures lie in the catacombs, and there are scattered tombs which are secluded and untouched.
+    Ancient weapons that glow with strange light can be found in these old tombs.
+    Other special rooms in the catacombs include brood hatcheries.
+    
+    So I need a proc gen algorithm that can produce:
+        Caverns
+            Firewood?
+            Campsites?
+
+        Dungeons
+            
+
+        Ruins
+            Doors
+            Traps
+            Ruined chapels
+
+        Catacombs
+            Tombs - Artifact weapons
+            Brood hives - Weird eggs
+            
+        Maybe a weird glowing mushroom area?
+
+11/8/23
+    I've been working on new enemies this morning just to see how flexible my framework is.
+    I added an ogre who is very slow, but does lots of damage and knocks characters prone on hit.
+        Prone works as intended, removing all move from the character.
+        The Ogre, being very slow, is hard-countered by being kited and hit by ranged attacks
+        This strategy will work when there are open spaces and few enemies
+        However, if the space is confined, and lots of enemies, especially ranged enemies are around, this will be difficult.
+    I also added an enemy called a skulker who is really fast and attacks twice.
+        Double attacking works great.
+        Fast enemies need to be taken out immediately otherwise they will harass the player characters continuously.
+    I think I have the beginnings of a pretty robust system here.
+    I think I should maybe add a few new features, and an enemy behavior overhaul is defintely on the horizon.
+    I do think a lot of the ground work has been laid though.
+
+    Enemy behavior overhaul features/stealth features
+        Enemies should be able to move backwards when they are under their minimum range.
+        Enemies should flee Sometimes
+            Enemies could just flee when they take too much Damage
+            They could also take into account how many of their allies they can see, how many are dead, or how many are fleeing
+        Enemies should be surprised if they don't hear or see you coming.
+        Enemies should become alert or suspicious if they hear combat nearby
+    
+    Here is some quality of life stuff I'm going to work on for a bit
+        Enemy turns should be handled based on a list of enemies that are present on the grid nearby.
+            This will replace the current system of giving every enemy a turn, but making them do nothing if they're too far.
+            Done.
+
+        Light sources should be handled based on lightsources nearby on the grid as well.
+        Tiles should be handled more wholistically rather than having their attributes spread all over the place.
+    
+11/9/23
+    I want to overhaul some lighting things. I want light sensitivity, and other traits to be based on a bright-dim-dark system.
+    Lightsources should have a graphical effect, and then totally separately, they should provide a radius of bright and dim light.
+    A torch should should provide one square of bright light, and several more of dim light.
+    Goblins in bright light become stunned.
+    Player characters have a penalty to attacking enemies in darkness.
+    Enemies gain a bonus to attacking players from darkness.
+
+    The Deserter's torch should be able to go out sometimes, resulting in him having to light a new one.
+    Darkness should be very dangerous in general. Moving around in darkness, allowing enemies to remain in darkness etc.
+
+    A lanturn could be itroduced that can be hooded to provide dim light that doesn't alert enemies of your presence.
+
+    Light sources should also be integrated into the new grid.
+        They could be tied to items or characters.
+        They should also be able to be tied to objects like campfires.
+        In theory, they should also be able to follow animations like flaming arrows, thrown torches, or explosions.
+        Animation lightsources could always be handled separately, assuming they take place in real time rather than based on rounds.
+        I could just add a method to the tile class called read lighting.
+            Read lighting could just return any lightsources contained in characters or objects in that tile.
+        The sight map could be pruned based on dim light vs darkness rather than average of RGB lighting
+
+    I'm thinking about tackling some enemy AI overhaul stuff.
+        Enemies should use something other than simple aStar to get to their target, and AStoAQ to act on that path.
+        Enemies should have a more sophisticated AI.
+            prefer to move away from player characters until they are at their max range.
+            move away from characters when they are closer than their minimum range.
+            shoot at targets based on some criteria (currently it's just closest, maybe it should be based on AC, HP, or random)
+            enemies could also choose targets based on to-hit penalties when I add those in for ranged attacks.
+            prefer attacking in groups (some shouldn't care)
+            sometimes flee (trying to get as far away as they can. They may regain their resolve if they run into allies again)
+            Have AOE attacks that they aim in a way that maximizes the number of player characters inside the area.
+
+11/10/23
+    This morning, I have continued to work on a room accretion algorithm.
+    So far, I actually made a simple system, that ties together square rooms with single tile doorways.
+    It populates the doorways with doors after generation, and you can do a room-by-room dungeon crawl through the result.
+
+    I want to think about the best way to turn this algorithm into something that makes for an engaging and interesting dungeon.
+
+    I want a few things out of my dungeon generation algorithm.
+        I want it to feel like the dungeon serves a purpose and tells a story
+            Square rooms made of old smooth stone could clearly be ruins of some kind.
+                They could be overgrown with moss and have walls missing to mark their age.
+                Ruined statues and old furniture and ancient skeletons might litter them.
+            Small rounded hovels roughly protruding from them could be goblin dens dug into the ruined walls.
+            Occasional secret doors could be found through rubble or refuse that lead to untouched tombs.
+                The chambers would be made of untouched smooth stone with no moss
+                Statues, furniture, sarcophagi, etc could all be intact and maybe have readable inscriptions.
+                Specal items could be contained wthin.
+            Larger rounded chambers can be found at the end of snaking tunnels, containing goblin hatcheries/barrackses
+            Sanctuaries of some kind could be found that present the opportunity for the player to make a fire and rest
+                Resting could repopulate portions of dungeons leading to a trade-off with PC health.
+        
+        I want the dungeon to present novel and engaging challenges
+            Rooms should have several different variables whose combination determines the ideal strategy for clearing them.
+                Objects in rooms should present challenges or opportunities.
+                    Campfires could present the opportunity to kick enemies into fires.
+                    Liquor barrels could be set on fire to roast goblins or choke them with smoke.
+                    Spike pits or traps could present a danger to the player that can be turned on enemies.
+                Rooms should have a variety of enemies with different abilities and behavior
+                    Some enemies will attack at range
+                    Some enemies will do AOE attacks
+                    Some enemies will stun characters or knock them prone
+                    Some enemies will flee, ruining surprise opportunities or even gather reinforcements
+                    Some enemies will have to be dealt a deathblow after being reduced to zero HP
+                    Some enemies might be hostile to everyone, even the other enemies.
+                        They could be locked in cages or chained to walls, allowing players to free them strategically
+                    Some enemies could have more outlandish abilities
+                        They could raise the dead as zombies who will die when the necro dies
+                        They could mind control PCs to turn them on one another
+
+        
+11/11/23
+    Today I want to work on fleshing out my room accretion algorithm to have multiple generations.
+    I want to use one generation to produce rooms of varying shapes and sizes that are intact.
+        These rooms should have some kind of discrete purpose that determines what spawns in them
+            Tombs will have sarcophagi
+            Smithies will have forges
+            Kitchens will have stoves
+            Chapel's will have pews and statues
+            Bedrooms will have beds
+    I then want to do a pass of degredation on them.
+        Knock out smooth stone walls exposing cavern walls.
+        Creating patches of moss and pools of water.
+        Breaking doors and causing cave-ins of rubble.
+        Some rooms should be excluded from degredation.
+            Rooms that are walled in by rubble/have secret doors.
+    Then I want to do a generation of adding the goblin presence.
+        Add hovels to the outsides of large rooms.
+        Add skeletons, trash, and debris.
+        Add brood hatcheries at the end of long rough-carved tunnels.
+
+    Let's start by generalizing my room accretion algorithm.
+    I want it to generate rooms of one type first then change parameters and run again.
+    I also think that some kind of recursive element or something akin to WFC might be nice.
+    Corridors for example could only be unable to spawn rooms of the type corridor when they branch.
+    A barracks type room could only be able to spawn bedrooms, and bedrooms could be unable to spawn any rooms.
+    This would make rooms have to fulfill certain compatibility constraints in order to spawn.
+    This could allow for some real variety and story-telling of a kind even within one pass of RA.
+
+    Corridor, Barracks, Kitchen, Chapel, Tomb, Common area, Forge, Library/Study, Entrance to new area of ruins.
+
+11/12/23
+    Today I want to work on my room accretion algorithm for proc-gen.
+    I created a system by which the rooms know what kind of room they are.
+    I also created a table that keeps track of which rooms can connect to which other rooms.
+    I want to figure out a way to give rooms properties like size, shape, and likelihood of containing items/objects/enemies.
+    Today I want to focus on making rooms that fulfill my basic criteria.
+        I want rooms that tell a story and feel like they serve a purpose (IE they shouldn't feel gamey)
+        I want rooms to provide interesting and novel challenges
+    What is the simplest possible way to make that happen so I can get off to a good start.
+
+    Two generations of room accretion. 
+        One that creates the underground city as it was.
+            Barrackses -> Bedrooms
+            Temples -> Tombs
+            Common Areas/Dining Halls -> Kitchens
+        In-between step of weathering in between.
+            Pick rooms to be made isolated via secret doors/rubble
+            Pick random walls to break down, first checking if they connect rooms together.
+            Add rubble, moss, water, vines, etc
+            Break furniture.
+        One that adds the goblin additions and modifications.
+            Hovels
+            Brood hatcheries
+    
+11/14/23
+    I took yesterday off. It was not a good day.
+
+    Today I am coming back to my RA algorithm, and I've been really unimpressed.
+    I was hoping it would start to produce natural looking room layouts that would give me some inspiration
+    They just look really bland and lifeless though. They look totally arbitrary
+    They are just featureless rooms so I'm not really sure why I expected any different.
+
+    I think I want to change tactics and just try to think of a few basic gameplay functions I want rooms to fulfill.
+    I think the game-play is obviously my first priority so I am going to switch to working on that first.
+
+    Rooms should have predictable enemy spawn points that provide enemies and players with strategic opportunities.
+
+    Things to consider that don't require new features
+        Choke points
+        Difficult terrain
+        Objects that prevent movement but can still be shot through (fortifications)
+        Objects that prevent shooting, but not movement (thick vegetation)
+
+11/15/23
+    Today I mostly just did tweaking. I added reactions so that attacks of opportunity work better.
+    I also did a bit of work on an overwatch feature. It's not done yet, but it would be another use for reactions.
+    Yesterday I ended up adding it procedurally generated furniture to differentiate rooms.
+    It still looks pretty terrible because it's all just randomly strewn about each room,
+    but I made it so that the chapel contains statues and the floors are smoothed to suggest it was a special place.
+    I don't hate that part. I think it might eventually look kind of nice.
+
+    I think maybe the next step is to add features to the room types themselves.
+    Rooms should dictate where enemies, objects, and items are spawned.
+
+    This way, when you walk into a room, you get a feeling of enemies arranged in a way that is novel,
+    and objects and items also being novel.
+    Ideally, you would walk into a room, and it would tell a story.
+        There would be remnants of a place that once was.
+        There would be wreckage left over from its destruction.
+        There would be the vandalism and perversion of its current inhabitants who are squatting there.
+    In addition to telling a story, it should pose a challenge.
+        There would sometimes be enemies arrayed in defensive positions you'd have to assault.
+        There would sometimes be fortifications and obstacles in your way.
+        There would also sometimes be things you could use to your advantage:
+            Fires you might kick enemies into.
+            Bridges you might kick enemies off of.
+            Wreckage you might use for cover.
+            Barrels you might explode.
+
+11/16/23
+    With reactions and surprise, I've tweaked the combat mechanics a little bit, and I think it's for the better.
+    I want to think about the order of operations for implementing my next few features for my room overhaul.
+    I want more dynamic and consequential objects
+        Objects can do have effects when moved through, be destroyed, and have effects on destruction
+    I want more combat options
+        I want attacks that move characters around, or damage characters in an area of effect
+        Maybe one weapon should cleave, damaging enemies in an arc
+        Another weapon maybe batters, throwing an enemy back, and maybe damaging enemies they hit.
+        Another consideration is maybe more actions, bonus actions or half actions
+            These could be used for shoving attacks, thrown weapons, or small weapons.
+        Complete my overwatch mechanic
+            This would give the player another option for what to do when a character can't get in range
+            You would queue up an attack so that when an enemy comes in range, it automatically triggers the attack
+    I also want rooms to generate with enemy, object, and item spawn points.
+    If enemies are going to drop weapons, I think I should consider adding in item degredation and ammunition.
+        Both of these would add scarcity to weapons. You don't just have one weapon.
+        You have a sword that you will need to replace when it becomes chipped, dulled, or Broken
+        You have a stack of throwing daggers, that you will run out of if you don't keep collecting new ones
+        You have a quiver of arrows that will run out, resulting in the need for a backup weapon
+    
+    Balance considerations
+        Daggers could be fast weapons, allowing them to be used with a half action.
+            They could do low damage, but the fugitive could have a sneak attack that increases damage on compromised targets.
+            This would mean the fugitive should use a dagger because the sneak attack bonus is flat, and makes the dagger a good option.
+        Switching weapons could take a half action.
+            This would mean that something like a longsword couldn't be drawn and used on the same turn.
+        Something like a dagger, however, could be drawn and used in the same turn. 
+            This would mean that the Huntsman should carry a half-action secondary for enemies who get up close.
+        
+        What about offhands? Should they be considered?
+            Considerations
+                Light sources
+                Shields
+                Dual wielding
+                Duelist style
+            Offhand functionality would provide a tradeoff.
+            Duel wielding could give an extra attack
+            Shields could give extra defense
+            Light sources could provide valuable visibility
+            A free offhand could provide a bonus
+
+    It seems like I'm really juggling three different projects right now
+    One is a combat overhaul that would add new functionality to give players and enemies more options and make combat deeper.
+    One is an object overhaul that would make objects more consequential, and provide interesting environments to fight in and explore.
+    The third is a proc-gen overhaul that would make rooms generate in a way that would make use of these mechanics
+
+    There is a fourth thing that I have been putting off for a while which is an enemy AI overhaul
+        This would include adding the ability for enemies to flee when they take too much damage or when their allies are slain.
+        This would include the ability for ranged enemies to move to an optimal range for their attacks.
+        This would also include enemies being able to interact with objects.
+        This would also include enemies having awareness that is more wholistic.
+            Enemies shouldn't be surprised by you if they hear you coming.
+            Enemies should be alerted to your presence by fleeing enemies and noise, and come to investigate.
+            Enemies should explore a little bit before giving up, if they lose track of you.
+
+    So I guess there's really four overhauls to be done.
+        Combat
+        Objects
+        Proc-gen
+        AI
+    
+    I've got two weeks to finish my beta build, and I want to start playtesting very soon!
+    Maybe the goal should be a playtest build tomorrow when I make a post in the sharing Saturday thread in the evening.
+    I want to have at least three regions in the finished product:
+        Caverns
+        Tunnels
+        Ruins
+    I could maybe do two different files for the playest:
+        One which has caverns and tunnels and one which has ruins.
+    I could alternatively do a proc-gen overhaul to create one big cavern to tunnel to room accretion algorithm.
+
+    Detour:
+    Bits of dialogue
+        Eulogies:
+            For the Fugitive:
+                He goes to stand before one final judge.
+                Perhaps he will fair better this time.
+            For the Deserter:
+                Some fights a man must run from only so he may meet his end where he is supposed to.
+            
+            The blade istelf incites the deeds of violence,
+            but one thrust of the sword will not be undone by many of the shovel.
+                
+        Poet/Minstrel:
+            Each man's heart is missing a piece or two.
+            I could sooner mend a canyon stone-by-stone than mend the whole in my own
+
+            I once gave a whole silver round to a foretune teller.
+            She said she could answer any question I had.
+            I asked her how I could heal from a wound I've always had.
+            She gave me my round back without a word.
+
+            A true tragedy is one that holds a thin sliver of hope all until its bitter end.
+
+            A man's heart may shine like a candle in the dark.
+            A mere gust of twisted fate my turn it to unseen ash and smoke.
+
+        Fae:
+            (Your kind are like animals!)
+            Are you shaped after your shadow?
+            Is your foot fitted snuggly to the curves of your boot?
+            No. Animals are like my kind.
+            Animals were a stepping stone between what I am and what you are.
+            If you truly wished to walk back along those stones, I could show you what lies across the water.
+        
+        The Huntsman:
+            (On kill)
+            All game answers the same to the arrow truly nocked.
+        
+        The Fugitive:
+    
+    Back to the matters at hand
+    Combat/actions
+    Object
+    Proc-gen
+    AI
+
+    Proc gen is the one that is the most lacking. It is completely placeholder content.
+    Without an AI/Combat/Object overhaul though, I'm not sure if stringing the rooms together better will really make it work.
+
+    I could potentially come back to my room accretion algorithm, and repurpose it to create caverns and tunnels.
+    That could be a possible solution to my many-algorithm problem.
+
+11/17/23
+    Today is my planned playtest build deadline. I'm gonna have to do some triage here.
+    All these need overhauls
+        Proc-gen
+        Objects
+        AI
+        Combat/actions
+    The simplest one is objects
+    The most consequential one is proc-gen
+
+    Let's try and knock out some objects, and then focus on proc-gen.
+        Objects such as camp fires should do damage. - Done (I used the traits and conditions system)
+        Rough barricades/spiked barricades that can be shot through should be added.
+        Object destruction should be added.
+        Objects being set on fire would be sick, but might have to wait.
+
+    Proc-gen
+        Rooms should generate with pre-set enemy and object spawn points.
+        This requires a queue of objects and enemies that need to be spawned.
+        The enemy/object should be dependant on the roomtype.
+        The functions that determine the shapes of rooms need to be able to return a range of values.
+        This would give rooms the ability to generate multiple floor tiles types, interior walls more easily, and objects/enemies.
+
+11/19/23
+    I took yesterday off. It was a hard day.
+    Today I want to come back to my proc gen overhaul.
+    I think I want to come up with a more fleshed out roomtype class.
+    I might be able to come up with a more sophisticated function for roomshape.
+    I think it should return a few different values.
+        Enemy spawn points.
+        Objects and object types.
+        Alternative floor types and interior walls.
+    I don't love the idea of having to make a bunch of prefabs though so I'm not sure how best to proceed.
+
+    Another thing I could do, is return Tiles.
+    That way I could put objects, enemies, different tile types, etc all in one return value.
+    Then I could check the returned tile outlines against the nodemap, or even the newgrid and determine if it fits.
+    This would mean the functions would have to be a lot more sophisticated.
+    I could make a bunch of prefabs. Not looking forward to that.
+    I could, alternatively, come up with a bunch of functions for populating rooms with enemies and furniture.
+    Objects could be placed down first with a series of restrictions
+        Tables need chairs, chairs need tables. Some kind of symmetry, leave some spaces open.
+        Barricades need enemies, enemies need things to be doing.
+    This might be an interesting project. Like a more complicated version of the CA I use for cavern floors.
+    It might end up being closer to wave-function-collapse than CA.
+    Rooms would come with minimums and maximums of furniture and enemies of different types that could be placed.
+    I still like the idea of generating the ruins as they once were first and then doing a pass of degredation.
+    Maybe that will have to wait though because it would be a rather academic exercise that wouldn't pay off for quite some time.
+    I could even use WFC for room shapes tbh.
+    If I just feed the general outlines of rooms to the roomshape functions,
+        I could determine how much of that region should actually be filled in based on an algorithm of my choosing.
+        Rooms could used CA if they are caves.
+        Rooms could use WFC if they need to be populated by a particular kind of tile.
+        Hmmmmmm...
+
+11/23/23
+    I have not been working on my game recently. Things have not been good.
+    Today I am thinking about coming back to my proc-gen.
+    I'm trying to figure out the easiest way to rework things so that I actually have levels to play through.
+    I really just want to be done with this game. I had so many ideas for how I wanted it to go.
+    I am running out of steam so fast though.
+
+    My room accretion algorithm needs reworking. Right now, all of its functions are totally siloed.
+    What I want is for the generation of objects and enemies to be coherent. I want their spawns to make sense.
+    In theory I should have a bunch of properties of each room type:
+        Minimum enemies
+        Maximum enemies
+        Object types []
+        Minimum of each object type []
+        Maximum of each object type []
+        Object relationship rules
+        Enemy relationship rules
+        Enemy-Object relationship rules
+        Walkability without obstruction
+        Defined entrances and exits
+        Method of construction (Algorithmic vs CA)
+
+    Right now none of this is really possible. The room generation is handled one time by the roomshape method.
+    After a room is generated, all I have is a simple map of which tiles are of what room type.
+    I currently do not have any way to track each individual room or populate it with anything.
+    I am currently just brute-forcing it, and randomly spawning items in rooms based on just a roll of the dice.
+    This means bedrooms can have three beds or zero when in theory they should all have exactly one.
+
+11/24/23
+    I did not end up working on much yesterday. Some triage is gonna be necessary.
+    I really don't feel up to the task of finishing this project.
+    I'm not really sure how to wrap it up such that I can wash my hands of it.
+
+    I feel like my proc-gen work has been really frustrating.
+        I have patched together algorithms that barely work using data types that are an absolute mess to handle.
+        I really want to rework them all from the ground up, but I'm really not confident it my ability to follow through with it.
+        What would a whollistic set of proc-gen algorithms look like?
+            Fundamentally, room accretion makes the most sense, with a really broad concept of what constitutes a room.
+            Start by patching together rooms generated via CA to be caverns.
+            Once enough caverns have been generated, start generating tunnels.
+            Once enough tunnels have been generated, identify the biggest one/furthest one from the spawn.
+            Start doing generating ruins from that one.
+
+            Maybe I shouldn't throw out my existing CA and start from scratch with room accretion.
+            But to be honest, I think I always knew that my inital CA algorithm was only going to get me so far.
+            It's just fundamentally blind. I can tune it such that it creates things that seem like levels,
+            but I have no realy way of confirming that the output will always make for a good level.
+            I think I should start with a predictable and reliable algorithm, and work my way from there.
+            The ration of tunnel area to cavern area for example is deeply opaque. I would have to empirically test to figure it out.
+            I want an algorithm that produces a predicatable product to which I can add randomness.
+            Starting with pure noise, and then trying to force it to conform to some kind of rhyme or reason is really difficult.
+
+            My new whollistic room accretion algorithm, should use a new property of the tile class called room.
+            the room property should just be a number, that number should be the index of the room in a rooms array.
+            The rooms array should contain objects of the class room.
+            The room objects, during generation, should track whether the room has been fully generated and populated.
+            The room objects should inherit properties from their room type, but also have randomized properties.
+
+            This new room accretion algorithm should also use something like my modified flood fill, just like the current RA.
+
+11/25/23
+    No work has been done as of late.
+
+    New proc-gen algorithm is really daunting. I am gonna need to scrap a lot of old code so I am hesitant to rush into something new.
+    Flood fill should be used to mine out a map.
+    Each time the algorithm runs into a wall, it should add it to the wall queue.
+    Each time it runs out of floor, it should pick the most recently run into wall, and start digging.
+    Depending on what kind of room it is coming from, it should pick a type of room to generate.
+
+11/28/23
+    I haven't done any real work in the past week or two.
+    I am really tempted to scrap the whole project.
+    I don't really know where to go from here.
+    
+6/14/24
+    Today and yesterday I've just been looking over my code trying to remember how everything works.
+    I want to come back to this project, but I want things to go differently this time.
+    I would very much like to finish this game.
+    I think it should be called "Torchlight's Shadow" and I want it to basically be a minimalist TTRPG simulator.
+    I want it to be more or less OSR style with a few of my own twists.
+    I think the visual style is pretty much established. I just need to create my own custom font.
+    The audio is something I am looking forward to working on.
+    I want it to be dynamically generated by code the same way the visuals are.
+    I also want it to be moody and atmospheric.
+    I want the gameplay to be difficult enough that you have to think about your actions,
+    but not so difficult that you feel the need to minmax or perfectly optimize.
+    I want the difficulty to be in service of the tone, and I want the game to feel like an artsy experience...
+    Not just a number-crunching wargamer exercise.
+    
+
