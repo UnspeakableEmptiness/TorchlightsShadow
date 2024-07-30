@@ -1,4 +1,6 @@
 gameText = document.getElementById("game-text");
+document.getElementById('mobileKeyboardInput').focus();
+
 
 //#region Event Listeners
 document.addEventListener('keydown', function(event) {
