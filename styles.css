@@ -1,0 +1,48 @@
+/* styles.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* This ensures that padding and border are included in the total width and height of the elements */
+}
+body{
+  background-color: black;
+  /* color: white; */
+  display: flex; /* Use flexbox to center content */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  height: 100vh; /*Make the body take up the full viewport height */
+}
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('PressStart2P-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+#game-text {
+    white-space: pre; /* Preserve whitespace and allow text wrapping */
+    font-family: "Press Start 2P";
+    color: white;
+    font-size: 26px; /* Adjust the font size as needed */
+    /* transform: scaleX(2.25); */
+    line-height: 0; 
+    /* Set line height to 1, which matches the font size */
+    /* Specify other CSS properties as needed */
+  }
+
+  .small-line-height {
+    line-height: 0.5em;
+  }
+
+  .unselectable {
+    -webkit-user-select: none; /* Chrome, Safari, Opera */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* IE 10+ */
+    user-select: none;         /* Standard syntax */
+    cursor: none;           /* Change cursor to default instead of text selection */
+}
+
+.rotate {
+  display: inline-block; /* Allows transform to work on inline elements */
+  transform: rotate(90deg); /* Adjust the degree as per your requirement */
+}
